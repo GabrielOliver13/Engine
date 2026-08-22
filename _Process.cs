@@ -228,6 +228,46 @@ public static class Input
     }
 }
 
+public static class Time
+{
+    public static float deltaTime {get; private set;}
+    public static float gameTime {get; private set;}
+    public static int FPS {get; private set;} = 0;
+    private static float fpsElapsedTime = 0;
+    private static int amountFrames = 0;
+    public static void _Update(GameTime gametime)
+    {
+        deltaTime = (float)gametime.ElapsedGameTime.TotalSeconds;
+        gameTime += deltaTime;
+
+        GetFpsUpdate();
+    }
+
+    private static void GetFpsUpdate()
+    {
+        if (Trigger(ref fpsElapsedTime, 1f))
+        {
+            FPS = amountFrames;
+            amountFrames = 0;
+        }
+        else
+            amountFrames++;
+    }
+
+    public static bool Trigger(ref float elapsed, float seconds)
+    {
+        if (elapsed < Time.gameTime)
+        {
+            elapsed = Time.gameTime + seconds;
+            return true;
+        }
+        return false;
+    }
+}
+
+
+
+
 
 // public class TexturesRenderinManager
 // {

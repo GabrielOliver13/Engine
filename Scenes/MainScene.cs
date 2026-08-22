@@ -13,8 +13,8 @@ public class MainScene : SceneBehaviour
 
     public MainScene()
     {
-        // ViewWidth = 1600;
-        // ViewHeight = 900;
+        ViewWidth = 800;
+        ViewHeight = 300;
         
     }
 
@@ -25,7 +25,6 @@ public class MainScene : SceneBehaviour
         spriteRendererX = new SpriteRenderer("TesteScene\\otherFolder\\WeBareBears");
 
     } 
-
     
 
     public override void Update()
