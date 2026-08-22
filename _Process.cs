@@ -265,30 +265,3 @@ public static class Time
     }
 }
 
-
-
-
-
-// public class TexturesRenderinManager
-// {
-    
-// }
-
-// public struct Data
-// {
-//     public Texture2D texture;
-//     public Vector2 position;
-//     public Rectangle? sourceRectangle;
-//     public Color color;
-//     public float rotation;
-//     public Vector2 origin;
-//     public float scale;
-//     public SpriteEffects effects;
-// }
-
-
-// public class Sprite
-// {
-    
-// }
-

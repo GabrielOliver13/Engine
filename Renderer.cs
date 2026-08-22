@@ -18,14 +18,29 @@ public struct TransfRenderer
     public Rectangle destinationRectangle;
     public Renderer renderer;
 
-    public TransfRenderer()
-    {
-    }
+    public TransfRenderer(){}
     public void DrawCall()
     {
         SceneManager.currentScene.rendererManager.renders.Add(this);
     }
 }
+
+
+
+public class RendererManager
+{
+    public List<TransfRenderer> renders = new();
+
+    public void Draw()
+    {
+        foreach(var render in renders)
+        {
+            render.renderer.Render(render);
+        }
+        renders.Clear();
+    }
+}
+
 
 
 public abstract class Renderer
@@ -57,17 +72,31 @@ public class SpriteRenderer : Renderer
     }
 }
 
-public class RendererManager
-{
-    public List<TransfRenderer> renders = new();
 
-    public void Draw()
+public class RectangleRenderer : Renderer
+{
+    public TransfRenderer transf;
+    //public Vector2 size;
+    public RectangleRenderer(int width, int height)
     {
-        foreach(var render in renders)
-        {
-            render.renderer.Render(render);
-        }
-        renders.Clear();
+        transf = new(){
+            texture = LoadContent.GetTexture("pixel"), 
+            destinationRectangle = new (0, 0, width, height), 
+            origin = new(width/2f, height/2f),
+            renderer = this
+        };
+        //size = new(width, height);
+    }
+    public override int GetWidth() => transf.destinationRectangle.Width;
+    public override int GetHeight() => transf.destinationRectangle.Height;
+
+    public override void Render(TransfRenderer transf)
+    {
+        transf.destinationRectangle.X += (int)transf.position.X;
+        transf.destinationRectangle.Y += (int)transf.position.Y;
+        transf.origin.X /= transf.destinationRectangle.Width;
+        transf.origin.Y /= transf.destinationRectangle.Height;
+
+        Game1._spriteBatch.Draw(transf.texture, transf.destinationRectangle, null, transf.color, transf.rotation, transf.origin, SpriteEffects.None, 0);
     }
 }
-
