@@ -22,6 +22,7 @@ public abstract class SceneBehaviour
     public RenderTarget2D RenderTarget;
     public Color BackgroundColor = Color.SlateGray;
     public RendererManager rendererManager = new();
+    public PhysicsManager physics = new();
 
     public virtual void Start(){}
     public virtual void Update(){}

@@ -54,6 +54,7 @@ public class Game1 : Game
             Exit();
 
         Time._Update(gameTime);
+        SceneManager.currentScene.physics._Update();
         SceneManager.currentScene.Update();
         Input._Update();
         base.Update(gameTime);

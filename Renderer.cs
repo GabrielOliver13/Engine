@@ -123,34 +123,46 @@ public class RectangleRenderer : Renderer
 
 public static class LineRender
 {
-    public static void Line(Vector2 start, Vector2 end)
-    {
-        SceneManager.currentScene.rendererManager.lineRenders.Add(new(){start = start, end = end});
+    public static void Line(Vector2 start, Vector2 end, Color color){
+        SceneManager.currentScene.rendererManager.lineRenders.Add(new(){start = start, end = end, color = color});
     }
 
-    public static void Rectangle(float X, float Y, float Width, float Height)
+    public static void Rectangle(float X, float Y, float Width, float Height, Color color)
     {
-        Line(new(X, Y), new(X + Width, Y));
-        Line(new(X, Y + Height), new(X + Width, Y + Height));
-        Line(new(X, X + Height), new(X, Y + Height));
-        Line(new(X + Width, X + Height), new(X + Width, Y + Height));
+        Line(new(X, Y), new(X + Width, Y), color);
+        Line(new(X, Y + Height), new(X + Width, Y + Height), color);
+        Line(new(X, X + Height), new(X, Y + Height), color);
+        Line(new(X + Width, X + Height), new(X + Width, Y + Height), color);
     }
 
-    public static void Rectangle(Rectangle rect)
+    public static void Rectangle(Rectangle rect, Color color)
     {
-        Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
+        Rectangle(rect.X, rect.Y, rect.Width, rect.Height, color);
+    }
+
+    public static void NormalizedRectangle(Vector2 position, float Width, float Height, float rotation, Color color)
+    {
+        Vector2 topLeft = Vector2.Rotate(new(-Width/2f, -Height/2), rotation);
+        Vector2 topRight = Vector2.Rotate(new(Width/2f, -Height/2), rotation);
+        Vector2 bottomLeft = Vector2.Rotate(new(-Width/2, Height/2f), rotation);
+        Vector2 bottomRight = Vector2.Rotate(new(Width/2, Height/2f), rotation);
+
+        Line(position + topLeft, position + topRight, color);
+        Line(position + topRight, position + bottomRight, color);
+        Line(position + bottomRight, position + bottomLeft, color);
+        Line(position + bottomLeft, position + topLeft, color);
     }
 
 
-    public static void Polygon(Vector2 position, int lines, int diameter)
+    public static void Polygon(Vector2 position, int lines, float diameter, Color color)
     {
         float piece = MathF.PI * 2 / lines;
         for(int i = 0; i < lines; i++)
         {
             Line(
                 position + Vector2.Rotate(Vector2.UnitX * diameter, piece * (i+1)), 
-                position + Vector2.Rotate(Vector2.UnitX * diameter, piece * i)
-            );
+                position + Vector2.Rotate(Vector2.UnitX * diameter, piece * i),
+            color);
         }
     }
     

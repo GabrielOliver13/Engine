@@ -1,7 +1,10 @@
+using nkast.Aether.Physics2D.Dynamics;
+
 namespace Engine;
 
 public class MainScene : SceneBehaviour
 {
+    List<CustomBody> bodies = new();
     public MainScene()
     {
         ViewWidth = 1600;
@@ -10,11 +13,11 @@ public class MainScene : SceneBehaviour
 
     public override void Start()
     {
-
+        
     }
     
     public override void Update()
     {
-        LineRender.Polygon(Input.Position, 16, 200);
+        
     }
 }
