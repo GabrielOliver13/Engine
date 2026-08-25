@@ -2,6 +2,19 @@
   "version": 4,
   "targets": {
     "net9.0": {
+      "Aether.Physics2D.MG/2.2.0": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/Aether.Physics2D.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/Aether.Physics2D.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "MonoGame.Content.Builder.Task/3.8.5.1": {
         "type": "package",
         "build": {
@@ -159,6 +172,21 @@
     }
   },
   "libraries": {
+    "Aether.Physics2D.MG/2.2.0": {
+      "sha512": "IkyyGF0gSlvLq3gysDW39Neuq0+1CiVvD1Nyj+W78fppwgnHnSMjn4FqQTnFwyh9PHgbHc2xXOYgbxe7I5J4Hg==",
+      "type": "package",
+      "path": "aether.physics2d.mg/2.2.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "aether.physics2d.mg.2.2.0.nupkg.sha512",
+        "aether.physics2d.mg.nuspec",
+        "icon.png",
+        "lib/netstandard2.0/Aether.Physics2D.dll",
+        "lib/netstandard2.0/Aether.Physics2D.xml"
+      ]
+    },
     "MonoGame.Content.Builder.Task/3.8.5.1": {
       "sha512": "9isFjZSi87Fy8Hv0qLeol27xUNdt3EzGYdBabR/qHVT7ujVGebWQzfgjDhJaT3M8tJEazpeA+ftYAgokmIZUbQ==",
       "type": "package",
@@ -348,6 +376,7 @@
   },
   "projectFileDependencyGroups": {
     "net9.0": [
+      "Aether.Physics2D.MG >= 2.2.0",
       "MonoGame.Content.Builder.Task >= 3.8.*",
       "MonoGame.Framework.DesktopGL >= 3.8.*",
       "Newtonsoft.Json >= 13.0.4"
@@ -405,6 +434,10 @@
         "framework": "net9.0",
         "targetAlias": "net9.0",
         "dependencies": {
+          "Aether.Physics2D.MG": {
+            "target": "Package",
+            "version": "[2.2.0, )"
+          },
           "MonoGame.Content.Builder.Task": {
             "target": "Package",
             "version": "[3.8.*, )"

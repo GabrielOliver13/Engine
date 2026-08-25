@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
 using Newtonsoft.Json.Linq;
 
 namespace Engine;
@@ -55,7 +56,7 @@ public static class LoadContent
     private static Dictionary<string, Texture2D> Textures = new();
     private static Dictionary<string, JObject> Jsons = new();
     private static Dictionary<string, SoundEffect> SoundEffects = new();
-
+ 
     public static class NewFile
     {
         public static Texture2D Texture2D(string name, string systemPath)
@@ -117,7 +118,7 @@ public static class LoadContent
 
 public static class Mecanics
 {
-    public static string AssetPath {get;} = "..\\..\\..\\Assets\\Sprites";
+    public static string AssetPath {get;} = "..\\..\\..\\Assets";
 
     public static List<string> GetFiles(string systemPath)
     {
@@ -137,7 +138,7 @@ public static class Mecanics
     {
         
         List<string> files = new();
-        GetFilesInProject($"..\\..\\..\\Assets\\Sprites\\{systemPath}", files, "..\\..\\..\\Assets\\Sprites".Length, true);
+        GetFilesInProject($"..\\..\\..\\Assets\\{systemPath}", files, "..\\..\\..\\Assets".Length, true);
         return files;
     }
     private static void GetFilesInProject(string systemPath, List<string> files, int indexLengh, bool init = false)

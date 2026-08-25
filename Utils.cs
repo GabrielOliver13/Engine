@@ -1,7 +1,19 @@
-// namespace Engine;
+namespace Engine;
+
+public static class Utils
+{
+    public static Texture2D pixel;
+    public static void Start()
+    {
+        pixel = LoadContent.GetTexture("pixel");
+    }
+}
 
 
 
+
+
+// --- MY OLD STUFF THAT WILL LATER ON BE ADDED --- /
 
 // public static class Utils
 // {

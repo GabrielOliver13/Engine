@@ -1,8 +1,10 @@
-﻿using System.IO;
-using System.Linq;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
+﻿global using System.IO;
+global using System.Linq;
+global using Microsoft.Xna.Framework;
+global using Microsoft.Xna.Framework.Graphics;
+global using Microsoft.Xna.Framework.Input;
+global using System.Collections.Generic;
+global using System;
 
 namespace Engine;
 
@@ -41,7 +43,7 @@ public class Game1 : Game
         
         
         Engine.LoadContent.LoadPathsAsAsset(Directory.GetFiles(Mecanics.AssetPath).ToList());
-
+        Utils.Start();
         SceneManager.currentScene.Start();
 
     }

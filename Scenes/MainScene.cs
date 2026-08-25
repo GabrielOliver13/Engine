@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Numerics;
-
 namespace Engine;
 
 public class MainScene : SceneBehaviour
@@ -16,12 +10,11 @@ public class MainScene : SceneBehaviour
 
     public override void Start()
     {
-        LoadContent.Folder("TesteScene");
 
-    } 
+    }
     
     public override void Update()
     {
-        
+        LineRender.Polygon(Input.Position, 16, 200);
     }
 }

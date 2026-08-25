@@ -36,3 +36,4 @@ c:\Users\Gabriel Oliveira\Desktop\Engine\obj\Debug\net9.0\Engine.genruntimeconfi
 c:\Users\Gabriel Oliveira\Desktop\Engine\obj\Debug\net9.0\ref\Engine.dll
 c:\Users\Gabriel Oliveira\Desktop\Engine\bin\Debug\net9.0\Newtonsoft.Json.dll
 c:\Users\Gabriel Oliveira\Desktop\Engine\obj\Debug\net9.0\Engine.sourcelink.json
+c:\Users\Gabriel Oliveira\Desktop\Engine\bin\Debug\net9.0\Aether.Physics2D.dll
