@@ -1,5 +1,4 @@
 namespace Engine;
-using nkast.Aether.Physics2D;
 using nkast.Aether.Physics2D.Dynamics;
 
 public class PhysicsManager
@@ -40,6 +39,7 @@ public abstract class CustomBody
 
 }
 
+
 public class CircleBody : CustomBody
 {
     
@@ -56,6 +56,7 @@ public class CircleBody : CustomBody
         Engine.LineRender.Polygon(Position, 16, Radius, Color.White);
     }
 }
+
 
 public class RectBody : CustomBody
 {
@@ -74,7 +75,6 @@ public class RectBody : CustomBody
     {
         Engine.LineRender.NormalizedRectangle(Position, Width, Height, Rotation, Color.White);
     }
-
 }
 
 

@@ -55,7 +55,9 @@ public class Game1 : Game
 
         Time._Update(gameTime);
         SceneManager.currentScene.physics._Update();
+        SceneManager.currentScene.camera2D._Update();
         SceneManager.currentScene.Update();
+
         Input._Update();
         base.Update(gameTime);
     }
@@ -66,10 +68,9 @@ public class Game1 : Game
         GraphicsDevice.Clear(SceneManager.currentScene.BackgroundColor);
         GraphicsDevice.SetRenderTarget(null);
 
-        _spriteBatch.Begin();
+        _spriteBatch.Begin(transformMatrix: SceneManager.currentScene.camera2D.ViewMatrix);
 
         _spriteBatch.Draw(SceneManager.currentScene.RenderTarget, Vector2.Zero, Color.White);
-       // _spriteBatch.Draw(((MainScene)SceneManager.currentScene).spriteRenderer.transf.texture, Vector2.Zero, Color.White);
 
         SceneManager.currentScene.rendererManager.Draw();
         _spriteBatch.End();

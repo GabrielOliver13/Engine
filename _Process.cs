@@ -1,12 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Media;
 using Newtonsoft.Json.Linq;
 
 namespace Engine;
@@ -23,6 +15,7 @@ public abstract class SceneBehaviour
     public Color BackgroundColor = Color.SlateGray;
     public RendererManager rendererManager = new();
     public PhysicsManager physics = new();
+    public Camera2D camera2D = new();
 
     public virtual void Start(){}
     public virtual void Update(){}
@@ -163,7 +156,6 @@ public static class Mecanics
 
 public static class Input
 {
-
     public static Vector2 Position {get; private set;}
     public static Vector2 Moviment {get; private set;}
 
@@ -183,6 +175,8 @@ public static class Input
 
     public static MouseState _CurrentMouseState {get; private set;}
     public static MouseState _PreviestMouseState {get; private set;}
+
+    private static Vector2 prevPosition;
     
     public static void _Update()
     {
@@ -193,8 +187,10 @@ public static class Input
 
     private static void MousePositionUpdate()
     {
-        Position = _CurrentMouseState.Position.ToVector2();
-        Moviment = Position - _PreviestMouseState.Position.ToVector2();
+        Position = Vector2.Rotate(_CurrentMouseState.Position.ToVector2() / SceneManager.currentScene.camera2D.Zoom, -CameraManager.Rotation);
+        Moviment = Vector2.Rotate(_PreviestMouseState.Position.ToVector2() / SceneManager.currentScene.camera2D.Zoom, -CameraManager.Rotation) - Position;
+        Vector2 rot = Vector2.Rotate(new(CameraManager.ViewWidth/2 / CameraManager.Zoom, CameraManager.ViewHeight/2f / CameraManager.Zoom), -CameraManager.Rotation);
+        Position -= new Vector2(rot.X - CameraManager.Position.X, rot.Y - CameraManager.Position.Y);
     }
 
     private static void GetMouseButtonStates()
@@ -264,6 +260,51 @@ public static class Time
             return true;
         }
         return false;
+    }
+}
+
+
+public static class CameraManager
+{
+    public static Vector2 Position {get => SceneManager.currentScene.camera2D.Position; set => SceneManager.currentScene.camera2D.Position = value;}
+    public static float Rotation {get => SceneManager.currentScene.camera2D.Rotation; set => SceneManager.currentScene.camera2D.Rotation = value;}
+    public static float Zoom {get => SceneManager.currentScene.camera2D.Zoom; set => SceneManager.currentScene.camera2D.Zoom = value;}
+    public static int ViewWidth => SceneManager.currentScene.RenderTarget.Width;
+    public static int ViewHeight => SceneManager.currentScene.RenderTarget.Height;
+
+    public static void _Start()
+    {
+        
+    }
+}
+
+public class Camera2D
+{
+    public Vector2 Position {get; set;}
+    public float Zoom {get; set;} = 1f;
+    public float Rotation {get; set;} = 0f;
+    public Matrix ViewMatrix {get; private set;}
+    public Matrix CameraTransform {get; private set;}
+
+    public Camera2D()
+    {
+        ViewMatrix = Matrix.Identity;
+    }
+
+    public void _Update()
+    {
+        // ViewMatrix = 
+        //     Matrix.CreateTranslation(new(Position.X + CameraManager.ViewWidth/2f / Zoom, Position.Y + CameraManager.ViewHeight/2f / Zoom, 0)) *
+        //     Matrix.CreateRotationZ(Rotation) * Matrix.CreateScale(Zoom, Zoom, 0);
+    
+        ViewMatrix =
+            Matrix.CreateTranslation(new Vector3(-Position.X, -Position.Y, 0)) *
+            Matrix.CreateRotationZ(Rotation) *
+            Matrix.CreateScale(Zoom, Zoom, 1f) *
+            Matrix.CreateTranslation(new Vector3(
+            CameraManager.ViewWidth / 2f,
+            CameraManager.ViewHeight / 2f,
+        0));
     }
 }
 
