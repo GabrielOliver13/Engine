@@ -124,7 +124,7 @@ public class RectangleRenderer : Renderer
 public static class LineRender
 {
     public static void Line(Vector2 start, Vector2 end, Color color){
-        SceneManager.currentScene.rendererManager.lineRenders.Add(new(){start = start, end = end, color = color});
+        SceneManager.currentScene.rendererManager.lineRenders.Add(new(){start = start, end = end, color = color, thick = (int)Math.Ceiling(1f / CameraManager.Zoom)});
     }
 
     public static void Rectangle(float X, float Y, float Width, float Height, Color color)
@@ -154,17 +154,32 @@ public static class LineRender
     }
 
 
-    public static void Polygon(Vector2 position, int lines, float diameter, Color color)
+    public static void Polygon(Vector2 position, int lines, float diameter, Color color, float rotation = 0)
     {
         float piece = MathF.PI * 2 / lines;
         for(int i = 0; i < lines; i++)
         {
             Line(
-                position + Vector2.Rotate(Vector2.UnitX * diameter, piece * (i+1)), 
-                position + Vector2.Rotate(Vector2.UnitX * diameter, piece * i),
+                position + Vector2.Rotate(Vector2.UnitX * diameter, piece * (i+1) + rotation), 
+                position + Vector2.Rotate(Vector2.UnitX * diameter, piece * i + rotation),
             color);
         }
     }
+
+    public static void Cone(Vector2 position, float length, float height, float rotation, Color color)
+    {
+        Vector2 topPart = Vector2.Rotate(new Vector2(length, height/2f), rotation);
+        Vector2 bottomPart = Vector2.Rotate(new Vector2(length, -height/2f), rotation);
+        
+        var heighLine = position + topPart;
+        var lowLine = position + bottomPart;
+        
+        Line(position, heighLine, color);
+        Line(position, lowLine, color);
+        Line(lowLine, heighLine, color);
+    }
+
+    
     
 }
 

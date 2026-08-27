@@ -5,7 +5,6 @@ global using Microsoft.Xna.Framework.Graphics;
 global using Microsoft.Xna.Framework.Input;
 global using System.Collections.Generic;
 global using System;
-
 namespace Engine;
 
 public class Game1 : Game
@@ -17,6 +16,7 @@ public class Game1 : Game
 
     public Game1()
     {
+        Rand._Start();
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
@@ -36,7 +36,7 @@ public class Game1 : Game
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         _graphicsDevice = GraphicsDevice;
 
-        SceneManager.currentScene = SceneManager.CreateScene<MainScene>();
+        SceneManager.currentScene = SceneManager.CreateScene<Scenes.SpaceShipsWar.Game>();
 
         SysWindow.SetSize(SceneManager.currentScene.ViewWidth, SceneManager.currentScene.ViewHeight);
         
@@ -54,9 +54,12 @@ public class Game1 : Game
             Exit();
 
         Time._Update(gameTime);
+        SceneManager.currentScene.deferredBehaviour.NextFrameUpdate();
+        TaskRunner.Update();
         SceneManager.currentScene.physics._Update();
         SceneManager.currentScene.camera2D._Update();
-        SceneManager.currentScene.Update();
+        SceneManager.currentScene._Update();
+        CameraManager._Update();
 
         Input._Update();
         base.Update(gameTime);
@@ -65,12 +68,15 @@ public class Game1 : Game
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.SetRenderTarget(SceneManager.currentScene.RenderTarget);
-        GraphicsDevice.Clear(SceneManager.currentScene.BackgroundColor);
+
         GraphicsDevice.SetRenderTarget(null);
+        GraphicsDevice.Clear(SceneManager.currentScene.BackgroundColor);
+
+
 
         _spriteBatch.Begin(transformMatrix: SceneManager.currentScene.camera2D.ViewMatrix);
 
-        _spriteBatch.Draw(SceneManager.currentScene.RenderTarget, Vector2.Zero, Color.White);
+        //_spriteBatch.Draw(SceneManager.currentScene.RenderTarget, Vector2.Zero, Color.White);
 
         SceneManager.currentScene.rendererManager.Draw();
         _spriteBatch.End();

@@ -16,9 +16,10 @@ public abstract class SceneBehaviour
     public RendererManager rendererManager = new();
     public PhysicsManager physics = new();
     public Camera2D camera2D = new();
+    public DeferredBehaviour deferredBehaviour = new();
 
     public virtual void Start(){}
-    public virtual void Update(){}
+    public virtual void _Update(){}
 }
 
 public static class SceneManager
@@ -137,17 +138,8 @@ public static class Mecanics
     }
     private static void GetFilesInProject(string systemPath, List<string> files, int indexLengh, bool init = false)
     {
-        //var foundFiles = Directory.GetFiles(systemPath).Select(x => Path.Combine(Path.GetDirectoryName(x).Substring(indexLengh), Path.GetFileNameWithoutExtension(x))).ToList();
         var foundFiles = Directory.GetFiles(systemPath).Select(x => x.Substring(indexLengh+1)).ToList();
-        
-        // if (init)
-        //     files.AddRange(foundFiles);
-        // else
-        //     files.AddRange(foundFiles.Select(x => x.Substring(1)));
-        
         files.AddRange(foundFiles);
-
-
         var directories = Directory.GetDirectories(systemPath);
         foreach(var directory in directories)
             GetFilesInProject(directory, files, indexLengh);
@@ -156,7 +148,7 @@ public static class Mecanics
 
 public static class Input
 {
-    public static Vector2 Position {get; private set;}
+    public static Vector2 MousePosition {get; private set;}
     public static Vector2 Moviment {get; private set;}
 
     public static bool MouseLeftPressed {get; private set;} = false;
@@ -187,10 +179,10 @@ public static class Input
 
     private static void MousePositionUpdate()
     {
-        Position = Vector2.Rotate(_CurrentMouseState.Position.ToVector2() / SceneManager.currentScene.camera2D.Zoom, -CameraManager.Rotation);
-        Moviment = Vector2.Rotate(_PreviestMouseState.Position.ToVector2() / SceneManager.currentScene.camera2D.Zoom, -CameraManager.Rotation) - Position;
+        MousePosition = Vector2.Rotate(_CurrentMouseState.Position.ToVector2() / SceneManager.currentScene.camera2D.Zoom, -CameraManager.Rotation);
+        Moviment = Vector2.Rotate(_PreviestMouseState.Position.ToVector2() / SceneManager.currentScene.camera2D.Zoom, -CameraManager.Rotation) - MousePosition;
         Vector2 rot = Vector2.Rotate(new(CameraManager.ViewWidth/2 / CameraManager.Zoom, CameraManager.ViewHeight/2f / CameraManager.Zoom), -CameraManager.Rotation);
-        Position -= new Vector2(rot.X - CameraManager.Position.X, rot.Y - CameraManager.Position.Y);
+        MousePosition -= new Vector2(rot.X - CameraManager.Position.X, rot.Y - CameraManager.Position.Y);
     }
 
     private static void GetMouseButtonStates()
@@ -215,12 +207,12 @@ public static class Input
         _CurrentKeyboardState = Keyboard.GetState();
     }
 
-    public static bool ClickButton(Keys key)
+    public static bool Button(Keys key)
     {
-        return PressedButton(key) && _PreviestKeyboardState.IsKeyDown(key);
+        return ButtonDown(key) && _PreviestKeyboardState.IsKeyUp(key);
     }
 
-    public static bool PressedButton(Keys key)
+    public static bool ButtonDown(Keys key)
     {
         return _CurrentKeyboardState.IsKeyDown(key);
     }
@@ -254,7 +246,7 @@ public static class Time
 
     public static bool Trigger(ref float elapsed, float seconds)
     {
-        if (elapsed < Time.gameTime)
+        if ((elapsed+seconds) < Time.gameTime)
         {
             elapsed = Time.gameTime + seconds;
             return true;
@@ -272,9 +264,9 @@ public static class CameraManager
     public static int ViewWidth => SceneManager.currentScene.RenderTarget.Width;
     public static int ViewHeight => SceneManager.currentScene.RenderTarget.Height;
 
-    public static void _Start()
+    public static void _Update()
     {
-        
+        LineRender.NormalizedRectangle(Vector2.Zero, ViewWidth, ViewHeight, 0f, Color.Red);
     }
 }
 
@@ -308,3 +300,36 @@ public class Camera2D
     }
 }
 
+
+public class DeferredBehaviour
+{
+    private List<Action>[] nextFrameBuffers = {new(), new()};
+    public List<Action> currentAdd;
+    public DeferredBehaviour()
+    {
+        currentAdd = nextFrameBuffers[0];
+    }
+    public void NextFrameUpdate()
+    {
+        while(currentAdd.Count > 0){
+            ChangeBuffer(1);
+            ChangeBuffer(0);
+        }
+    }
+
+    private void ChangeBuffer(int index)
+    {
+        List<Action> inLoop = currentAdd; 
+        currentAdd = nextFrameBuffers[index];
+        foreach(var action in inLoop) action();
+        inLoop.Clear();
+    }
+}
+
+public static class DeferredManager
+{
+    public static void NextFrame(Action action)
+    {
+        SceneManager.currentScene.deferredBehaviour.currentAdd.Add(action);
+    }
+}

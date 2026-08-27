@@ -7,6 +7,16 @@ public static class Utils
     {
         pixel = LoadContent.GetTexture("pixel");
     }
+
+    public static float Slerp(float from, float to, float weight)
+    {
+        return from + MathHelper.WrapAngle(to - from) * weight;
+    }
+
+    public static void Debug()
+    {
+        Console.WriteLine($"Debug[{Time.gameTime}]");
+    }
 }
 
 
