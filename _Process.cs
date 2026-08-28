@@ -333,3 +333,21 @@ public static class DeferredManager
         SceneManager.currentScene.deferredBehaviour.currentAdd.Add(action);
     }
 }
+
+
+public struct TimeWrapper
+{
+    float compareTime;
+    float extraSeconds;
+    public bool Up => Time.gameTime < compareTime;
+    public TimeWrapper(float extraSeconds)
+    {
+        this.extraSeconds = extraSeconds;
+        Reset();
+    }
+
+    public void Reset()
+    {
+        compareTime = extraSeconds + Time.gameTime;
+    }
+}

@@ -13,6 +13,7 @@ public class Game1 : Game
     public static SpriteBatch _spriteBatch {get; private set;}
     public static GraphicsDevice _graphicsDevice {get; private set;}
     public static Game1 _game {get; private set;}
+    public static bool RenderVertices = false; 
 
     public Game1()
     {
@@ -23,6 +24,7 @@ public class Game1 : Game
         _game = this;
 
         _game.IsFixedTimeStep = false;
+
         
     }
 

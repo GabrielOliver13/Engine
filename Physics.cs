@@ -32,6 +32,7 @@ public enum CollisionCat
     Ship = Category.Cat1,
     Bullet = Category.Cat2,
     Sensor = Category.Cat3,
+    Shield = Category.Cat4,
 }
 
 public class CustomBody
@@ -62,23 +63,23 @@ public class CustomBody
         _physicsManager.bodies.Add(this);
     }
 
-    public CircleFixture CreateCircle(float radius)
+    public CircleFixture CreateCircle(float radius, Vector2 offSet, float density = 0)
     {
-        CircleFixture fixture = new(radius, body, this);
+        CircleFixture fixture = new(radius, body, this, offSet, density);
         customFixtures.Add(fixture);
         return fixture;
     }
 
-    public RectFixture CreateRect(float width, float height)
+    public RectFixture CreateRect(float width, float height, Vector2 offSet, float density)
     {
-        RectFixture fixture = new(width, height, body, this);
+        RectFixture fixture = new(width, height, body, this, offSet, density);
         customFixtures.Add(fixture);
         return fixture;
     }
 
-    public ConeFixture CreateCone(float length, float height)
+    public ConeFixture CreateCone(float length, float height, Vector2 offSet, float density = 1f)
     {
-        ConeFixture fixture = new(length, height, body, this);
+        ConeFixture fixture = new(length, height, body, this, offSet, density);
         customFixtures.Add(fixture);
         return fixture;
     }
@@ -131,6 +132,7 @@ public class CustomBody
 
     public virtual void LineRender()
     {
+        if (Game1.RenderVertices == false) return;
         foreach(var fixture in customFixtures)
         {
             fixture.Rendering();
@@ -223,7 +225,7 @@ public abstract class CustomFixture
     public Color debugLinesColor = Color.White;
     private HashSet<CustomFixture> foundCollisions = new();
     public int foundCollisionsCount => foundCollisions.Count;
-
+    public Vector2 OffSet {get; protected set;}
     public object CustomFixtureTag;
     protected void SetFixture(Fixture fixture, CustomBody customBody)
     {
@@ -266,40 +268,63 @@ public abstract class CustomFixture
         };
     }
 
+    public bool TryGetClosestFixture(Vector2 closestTo, out CustomFixture closest)
+    {
+        closest = null;
+        //if (foundCollisionsCount == 0) return false;
+        float compareDistance = 0;
+        foreach(var col in foundCollisions)
+        {
+            float distance = Vector2.Distance(col.CustomBody.Position, closestTo);
+            if (closest == null || distance < compareDistance) {
+                closest = col;
+                compareDistance = distance;
+            }
+        }
+
+        return closest != null;
+    }
+
+    public bool ContainsFixture(CustomFixture fixture){
+        return foundCollisions.Contains(fixture);
+    }
+
     public abstract void Rendering();
 }
 
 public class CircleFixture : CustomFixture
 {
     public float Radius {get; private set;} 
-    public CircleFixture(float radius, Body body, CustomBody from)
+    public CircleFixture(float radius, Body body, CustomBody from, Vector2 offSet, float density)
     {
+        OffSet = offSet;
         Radius = radius;
-        SetFixture(body.CreateCircle(radius / from._physicsManager.Units, 1f), from);
+        SetFixture(body.CreateCircle(radius / from._physicsManager.Units, density, offSet / from._physicsManager.Units), from);
         fixture.Tag = this;
     }
 
     public override void Rendering()
     {
-        LineRender.Polygon(CustomBody.Position, 16, Radius, debugLinesColor, CustomBody.Rotation);
+        LineRender.Polygon(CustomBody.Position + Vector2.Rotate(OffSet, CustomBody.Rotation), 16, Radius, debugLinesColor, CustomBody.Rotation);
     }
 }
 
 public class RectFixture : CustomFixture
 {
     public float Width {get; private set;}
-    public float Height {get; private set;} 
-    public RectFixture(float width, float height, Body body, CustomBody from)
+    public float Height {get; private set;}
+    public RectFixture(float width, float height, Body body, CustomBody from, Vector2 offSet, float density)
     {
+        OffSet = offSet;
         Width = width;
         Height = height;
-        SetFixture(body.CreateRectangle(Width / from._physicsManager.Units, Height / from._physicsManager.Units, 1f, Vector2.Zero), from);
+        SetFixture(body.CreateRectangle(Width / from._physicsManager.Units, Height / from._physicsManager.Units, density, offSet / from._physicsManager.Units), from);
         fixture.Tag = this;
     }
 
     public override void Rendering()
     {
-        LineRender.NormalizedRectangle(CustomBody.Position, Width, Height, CustomBody.Rotation, debugLinesColor);
+        LineRender.NormalizedRectangle(CustomBody.Position + Vector2.Rotate(OffSet, CustomBody.Rotation), Width, Height, CustomBody.Rotation, debugLinesColor);
     }
 }
 
@@ -308,24 +333,26 @@ public class ConeFixture : CustomFixture
 {
     public float Length {get; private set;}
     public float Height {get; private set;} 
-    public ConeFixture(float length, float height, Body body, CustomBody from)
+    public ConeFixture(float length, float height, Body body, CustomBody from, Vector2 offSet, float density)
     {
         Length = length;
         Height = height;
+        OffSet = offSet;
+
 
         Vertices vertices = new(){
-            Vector2.Zero,
-            new(Length / from._physicsManager.Units, -height/2f / from._physicsManager.Units),
-            new(Length / from._physicsManager.Units, height/2f / from._physicsManager.Units)
+            offSet / from._physicsManager.Units,
+            offSet / from._physicsManager.Units + new Vector2(Length / from._physicsManager.Units, -height/2f / from._physicsManager.Units),
+            offSet / from._physicsManager.Units + new Vector2(Length / from._physicsManager.Units, height/2f / from._physicsManager.Units)
         };
 
-        SetFixture(body.CreatePolygon(vertices, 1f), from);
+        SetFixture(body.CreatePolygon(vertices, density), from);
         fixture.Tag = this;
     }
 
     public override void Rendering()
     {
-        LineRender.Cone(CustomBody.Position, Length, Height, CustomBody.Rotation, debugLinesColor);
+        LineRender.Cone(CustomBody.Position + Vector2.Rotate(OffSet, CustomBody.Rotation), Length, Height, CustomBody.Rotation, debugLinesColor);
     }
 }
 
