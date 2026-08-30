@@ -17,6 +17,20 @@ public static class Utils
     {
         Console.WriteLine($"Debug[{Time.gameTime}]");
     }
+
+    public static void CameraChangeState(Keys debugKey)
+    {
+        if (Input.ButtonDown(debugKey))
+        {
+            if (Input.MouseMiddlePressed)
+                CameraManager.Position += Input.Moviment;
+            if (Input.MouseScroll != 0)
+            {
+                if (Input.MouseScroll > 0) CameraManager.Zoom *= 1.1f;
+                else CameraManager.Zoom *= 0.9f;
+            }
+        }
+    }
 }
 
 

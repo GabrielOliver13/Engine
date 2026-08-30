@@ -111,10 +111,16 @@ public class RectangleRenderer : Renderer
 
     public override void Render(TransfRenderer transf)
     {
+        
+        //transf.origin.X = (transf.destinationRectangle.X + transf.destinationRectangle.Width) /2;
+        //transf.origin.Y = (transf.destinationRectangle.Y + transf.destinationRectangle.Height)/ 2;
+        transf.origin = new(0.5f, 0.5f);
         transf.destinationRectangle.X += (int)transf.position.X;
         transf.destinationRectangle.Y += (int)transf.position.Y;
-        transf.origin.X /= transf.destinationRectangle.Width;
-        transf.origin.Y /= transf.destinationRectangle.Height;
+        transf.destinationRectangle.Width = (int)(transf.destinationRectangle.Width * transf.scale);
+        transf.destinationRectangle.Height = (int)(transf.destinationRectangle.Height * transf.scale);
+
+
 
         Game1._spriteBatch.Draw(Utils.pixel, transf.destinationRectangle, null, transf.color, transf.rotation, transf.origin, SpriteEffects.None, 0);
     }

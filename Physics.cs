@@ -58,7 +58,6 @@ public class CustomBody
         body = new();
         body.BodyType = BodyType.Dynamic;
         _physicsManager.world.Add(body);
-        CustomBodyTag = this;
         _physicsManager = SceneManager.currentScene.physics;
         _physicsManager.bodies.Add(this);
     }

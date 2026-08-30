@@ -302,35 +302,57 @@ public class Camera2D
 
 
 public class DeferredBehaviour
-{
-    private List<Action>[] nextFrameBuffers = {new(), new()};
-    public List<Action> currentAdd;
-    public DeferredBehaviour()
+{  
+    public List<Action> current = new();
+    public List<Action> toUpdate = new();
+    public DeferredBehaviour(){}
+
+    void Swap()
     {
-        currentAdd = nextFrameBuffers[0];
-    }
-    public void NextFrameUpdate()
-    {
-        while(currentAdd.Count > 0){
-            ChangeBuffer(1);
-            ChangeBuffer(0);
-        }
+        List<Action> _current = current;
+        current = toUpdate;
+        toUpdate = _current;
     }
 
-    private void ChangeBuffer(int index)
+    public void NextFrameUpdate()
     {
-        List<Action> inLoop = currentAdd; 
-        currentAdd = nextFrameBuffers[index];
-        foreach(var action in inLoop) action();
-        inLoop.Clear();
+        Swap();
+        foreach(var action in toUpdate) action();
+        toUpdate.Clear();
     }
 }
+
+
+// public class DeferredBehaviour
+// {
+//     private List<Action>[] nextFrameBuffers = {new(), new()};
+//     public List<Action> currentAdd;
+//     public DeferredBehaviour()
+//     {
+//         currentAdd = nextFrameBuffers[0];
+//     }
+//     public void NextFrameUpdate()
+//     {
+//         while(currentAdd.Count > 0){
+//             ChangeBuffer(1);
+//             ChangeBuffer(0);
+//         }
+//     }
+
+//     private void ChangeBuffer(int index)
+//     {
+//         List<Action> inLoop = currentAdd; 
+//         currentAdd = nextFrameBuffers[index];
+//         foreach(var action in inLoop) action();
+//         inLoop.Clear();
+//     }
+// }
 
 public static class DeferredManager
 {
     public static void NextFrame(Action action)
     {
-        SceneManager.currentScene.deferredBehaviour.currentAdd.Add(action);
+        SceneManager.currentScene.deferredBehaviour.current.Add(action);
     }
 }
 

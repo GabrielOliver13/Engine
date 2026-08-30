@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Engine;
 using nkast.Aether.Physics2D.Collision;
@@ -7,23 +8,30 @@ namespace Scenes.SpaceShipsWar{
     {
         public static int AreaLimit = 10_000;
 
+        SpaceShip target;
+
         public override void Start()
         {
+            BulletManager.Start();
+            BasicParticleSystem._Start("warning");
             BackgroundColor = new(40, 50, 60);
 
             physics.world.Gravity = Vector2.Zero;
 
-            for(int i = 0; i < 100; i++)
+            for(int i = 0; i < 200; i++)
             {
                 new SpaceShip();
             }
 
-            Game1.RenderVertices = true;
+            Game1.RenderVertices = false;
+            Next();
+
         }
         
         public override void _Update()
         {
-            CameraChangeState(Keys.LeftControl);
+            BasicParticleSystem._Update();
+            Utils.CameraChangeState(Keys.LeftControl);
 
             if (Input.Button(Keys.F))
             {
@@ -33,21 +41,26 @@ namespace Scenes.SpaceShipsWar{
             SpaceShipsManager._Update();
             BulletManager.Update();
             LineRender.Polygon(Vector2.Zero, 32, AreaLimit, Color.Red, Time.gameTime /2f);
+
+
+
+
+
+
+
+            if (target.body.hasBeenDestroyed || Input.Button(Keys.Space)) Next();
+            
+
+            CameraManager.Position = Vector2.Lerp(CameraManager.Position, target.Position, Time.deltaTime * 5);
+            CameraManager.Rotation = Utils.Slerp(CameraManager.Rotation, -(target.body.Rotation + MathF.PI/2f), Time.deltaTime * 2);
         }
 
-        public static void CameraChangeState(Keys debugKey)
+        private void Next()
         {
-            if (Input.ButtonDown(debugKey))
-            {
-                if (Input.MouseMiddlePressed)
-                    CameraManager.Position += Input.Moviment;
-                if (Input.MouseScroll != 0)
-                {
-                    if (Input.MouseScroll > 0) CameraManager.Zoom *= 1.1f;
-                    else CameraManager.Zoom *= 0.9f;
-                }
-            }
+            target = SpaceShipsManager.SpaceShips[Rand.Randint(0, SpaceShipsManager.SpaceShips.Count)];
         }
+
+        
     }
 
     public static class SpaceShipsManager
@@ -63,9 +76,95 @@ namespace Scenes.SpaceShipsWar{
     }
 
 
+    public class Particle
+    {
+        public float lifeTime;
+        public TransfRenderer transf;
+        private float totalLifeTime;
+        public float Percent {get; private set;} = 1f;
+        private Color color;
+        public Particle(float lifeTime, TransfRenderer transf)
+        {
+            totalLifeTime = lifeTime;
+            this.transf = transf;
+            this.lifeTime = lifeTime;
+            color = transf.color;
+        }
+
+        public void Update()
+        {
+            Percent = Math.Clamp(lifeTime/totalLifeTime, 0f, 1f);
+            lifeTime -= Time.deltaTime;
+            transf.color = color * (((int)(Percent * 4))/4f);
+            transf.DrawCall();
+        }
+    }
+    public static class BasicParticleSystem
+    {
+        private static SpriteRenderer renderer;
+        private static HashSet<Particle> transfs = new();
+        private static List<Particle> toRemove = new();
+
+        static float elapsed = 0;
+        public static void _Start(string particle)
+        {
+            renderer = new(particle);
+        }
+
+        public static void Add(Vector2 position, float rotation, string imageName)
+        {
+            if (Input.ButtonDown(Keys.Space)) return;
+            var transf = new TransfRenderer(){position = position, rotation = rotation, renderer = renderer, texture = LoadContent.GetTexture(imageName), scale = 1f};
+            transfs.Add(new(2f, transf));
+        }
+
+        public static void _Update()
+        {
+            foreach(var transf in transfs){
+                transf.Update();
+                if (transf.lifeTime < 0f) toRemove.Add(transf);
+            }
+
+            if (Time.Trigger(ref elapsed, 1f))
+            {
+                Console.WriteLine($"Particles: {transfs.Count} - Bullets: {BulletManager.Bullets.Count} - Ships: {SpaceShipsManager.SpaceShips.Count}");
+            }
+            foreach(var f in toRemove) transfs.Remove(f);
+            toRemove.Clear();
+
+            
+        }
+
+
+    }
+
+
+    public class DamageCash
+    {
+        Dictionary<SpaceShip, (float time, int shotsFrom)> cash = new();
+        List<SpaceShip> toRemove = new();
+        public bool GotDamage(SpaceShip from)
+        {
+            if (cash.TryAdd(from, (Time.gameTime + 1.5f, 0)))
+            {
+
+            }
+            else
+            {
+                var value = cash[from];
+                if (Time.gameTime > value.time)
+                {
+                    
+                } 
+            }
+        }
+
+        
+    }
+
     public class SpaceShip
     {
-        CustomBody body;
+        public CustomBody body;
         CustomFixture mainFixture;
         CircleFixture shieldFixture;
         public float shieldLife = 100f;
@@ -77,16 +176,13 @@ namespace Scenes.SpaceShipsWar{
         public float speedScale = 1f;
         public float shotsPerSeconds = Rand.Randint(0.01f, 0.2f);
         public float damage = Rand.Randint(5f, 20f);
+        public RectangleRenderer lifeRenderer;
         //public float shotSpeed = 50;
         public float Life {get=>_life; set
             {
                 _life = value;
                 if (_life < 0){
                     Destroy();
-                    DeferredManager.NextFrame(() =>
-                    {
-                        new SpaceShip();
-                    });
                 }
             }
         }
@@ -100,9 +196,12 @@ namespace Scenes.SpaceShipsWar{
         CustomFixture longView;
         public SpaceShip()
         {
+            lifeRenderer = new(100, 10);
+            lifeRenderer.transf.scale = 0.5f;
             body = new(){Position = new(Rand.Randint(-Game.AreaLimit/2, Game.AreaLimit/2), Rand.Randint(-Game.AreaLimit/2, Game.AreaLimit/2))};
             mainFixture = body.CreateCircle(shipSize, Vector2.Zero);
             SpaceShipsManager.SpaceShips.Add(this);
+            body.CustomBodyTag = this;
 
             mainFixture.CollidesWith = CollisionCat.Ship | CollisionCat.Bullet | CollisionCat.Sensor;
             mainFixture.CollisionCategories = CollisionCat.Ship;
@@ -118,7 +217,7 @@ namespace Scenes.SpaceShipsWar{
             shieldFixture.IsSensor = true;
             shieldFixture.CollisionCategories = CollisionCat.Shield;
             shieldFixture.CollidesWith = CollisionCat.Bullet;
-            shieldFixture.CustomFixtureTag = this;
+            shieldFixture.CustomFixtureTag = "Shield";
 
             BehaviorAsync();
         }
@@ -126,8 +225,12 @@ namespace Scenes.SpaceShipsWar{
         public void Destroy()
         {
             DeferredManager.NextFrame(()=>{
-                SpaceShipsManager.SpaceShips.Remove(this);
-                body.Destroy();
+                if (SpaceShipsManager.SpaceShips.Remove(this))
+                {
+                    body.Destroy();
+                    new SpaceShip();
+                    
+                }
             });
 
         }
@@ -136,7 +239,7 @@ namespace Scenes.SpaceShipsWar{
         {
             LineRender.Polygon(Position, 3, shipSize, Color.White, body.Rotation);
             if (shieldLife > 0)
-                LineRender.Polygon(Position, 5, shieldSize, Color.DodgerBlue, body.Rotation + Time.gameTime * 2);
+                LineRender.Polygon(Position, 5, shieldSize, Color.DodgerBlue * (_life / 100f), body.Rotation + Time.gameTime * 2);
 
 
 
@@ -160,6 +263,13 @@ namespace Scenes.SpaceShipsWar{
                 body.LinearVelocity = Vector2.Rotate(Vector2.UnitX * speed * speedScale, body.Rotation);
 
             longView.debugLinesColor = longView.foundCollisionsCount == 0 ? Color.White : Color.Coral;
+        
+            lifeRenderer.transf.position = body.Position + Vector2.Rotate(Vector2.UnitX * -25, body.Rotation);
+            lifeRenderer.transf.rotation = body.Rotation + MathF.PI/2f;
+            lifeRenderer.transf.destinationRectangle.Width = (int)Life; 
+
+            lifeRenderer.DrawCall();
+
         }
 
         private async void BehaviorAsync()
@@ -251,6 +361,13 @@ namespace Scenes.SpaceShipsWar{
     public static class BulletManager
     {
         public static HashSet<Bullet> Bullets = new();
+        public static SpriteRenderer bulletSprite;
+        public static void Start()
+        {
+            bulletSprite = new("point");
+            bulletSprite.transf.color = Color.Coral;
+            
+        }
         public static void Update()
         {
             foreach(var bullet in Bullets)
@@ -271,10 +388,12 @@ namespace Scenes.SpaceShipsWar{
         float elpasedLifeTime;
         SpaceShip ownerOrigin;
         float rot = Rand.Randint(0, 100f);
+        Vector2 shotedFrom;
         private Bullet(float radius, Vector2 from, float direction, SpaceShip ownerOrigin)
         {
             this.ownerOrigin = ownerOrigin;
             body = new(){Position = from};
+            shotedFrom = from;
             mainFixture = body.CreateCircle(Size, Vector2.Zero);
             //body = new CircleBody(radius, from);
             body.Rotation = direction;
@@ -287,29 +406,43 @@ namespace Scenes.SpaceShipsWar{
 
             mainFixture.AddCollisionAction((customFixture) =>
             {
-                if(customFixture.CustomFixtureTag is SpaceShip ship && ship != ownerOrigin)
+                if(customFixture.CustomBody.CustomBodyTag is SpaceShip ship && ship != ownerOrigin)
                 {
-                    if (ship.shieldLife > 0)
+                    float damage = (1f - Vector2.Distance(shotedFrom, body.Position) / (Game.AreaLimit/2f)) * ownerOrigin.damage;
+                    if (damage < 0) damage = 0;
+                    if (customFixture.CustomFixtureTag is string)
                     {
-                        ship.shieldLife -= ownerOrigin.damage;
-                        Destroy();
+                        if (ship.shieldLife > 0){
+                            ship.shieldLife -= damage;
+                            regenerateShield(damage);
+                            Destroy();
+                            BasicParticleSystem.Add(body.Position, direction + MathF.PI/2f, "base_warning");
 
+                        }
                     }
                     else
                     {
-                        ship.Life -= ownerOrigin.damage;
-                        regenerateLife();
+                        ship.Life -= damage;
+                        regenerateLife(damage);
                         Destroy();
+                        BasicParticleSystem.Add(body.Position, direction + MathF.PI/2f, "warning");
+
 
                     }
+
                 }
             });
         }
 
-        void regenerateLife()
+        void regenerateLife(float damage)
         {
             if (ownerOrigin.Life < 100)
-                ownerOrigin.Life += ownerOrigin.damage;
+                ownerOrigin.Life += damage;
+        }
+        void regenerateShield(float damage)
+        {
+            if (ownerOrigin.shieldLife < 100)
+                ownerOrigin.shieldLife += damage/2f;
         }
 
         public static void New(Vector2 from, float direction, SpaceShip ownerOrigin)
@@ -323,6 +456,7 @@ namespace Scenes.SpaceShipsWar{
                 body.Destroy();
                 BulletManager.Bullets.Remove(this);
             });
+
         }
 
         public void Update()
@@ -331,7 +465,9 @@ namespace Scenes.SpaceShipsWar{
                 Destroy();
             }
 
-            LineRender.Polygon(body.Position, 5, Size, Color.Coral, rot + Time.gameTime * 3);
+            BulletManager.bulletSprite.transf.position = body.Position;
+            BulletManager.bulletSprite.DrawCall();
+            LineRender.Polygon(body.Position, 8, Size * 2, Color.Coral, rot + Time.gameTime * 3);
         }
     }
 }
