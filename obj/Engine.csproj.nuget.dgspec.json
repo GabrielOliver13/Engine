@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Gabriel Oliveira\\Desktop\\Engine\\Engine.csproj": {}
+    "c:\\Users\\Gabriel Oliveira\\Desktop\\Engine\\Engine.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Gabriel Oliveira\\Desktop\\Engine\\Engine.csproj": {
+    "c:\\Users\\Gabriel Oliveira\\Desktop\\Engine\\Engine.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Gabriel Oliveira\\Desktop\\Engine\\Engine.csproj",
+        "projectUniqueName": "c:\\Users\\Gabriel Oliveira\\Desktop\\Engine\\Engine.csproj",
         "projectName": "Engine",
-        "projectPath": "C:\\Users\\Gabriel Oliveira\\Desktop\\Engine\\Engine.csproj",
+        "projectPath": "c:\\Users\\Gabriel Oliveira\\Desktop\\Engine\\Engine.csproj",
         "packagesPath": "C:\\Users\\Gabriel Oliveira\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Gabriel Oliveira\\Desktop\\Engine\\obj\\",
+        "outputPath": "c:\\Users\\Gabriel Oliveira\\Desktop\\Engine\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "yxV+cFpnVFE=",
+  "dgSpecHash": "K8uUst7IuC0=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Gabriel Oliveira\\Desktop\\Engine\\Engine.csproj",
+  "projectFilePath": "c:\\Users\\Gabriel Oliveira\\Desktop\\Engine\\Engine.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Gabriel Oliveira\\.nuget\\packages\\aether.physics2d.mg\\2.2.0\\aether.physics2d.mg.2.2.0.nupkg.sha512",
     "C:\\Users\\Gabriel Oliveira\\.nuget\\packages\\monogame.content.builder.task\\3.8.5.1\\monogame.content.builder.task.3.8.5.1.nupkg.sha512",

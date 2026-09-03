@@ -20,10 +20,11 @@ public struct TransfLineRenderer
 
 public struct TransfRenderer
 {
-    public Texture2D texture;
+    private Texture2D texture;
+    public Texture2D Texture {get=> texture ?? renderer.transf.texture; set=>texture = value;}
     public Color color = Color.White;
     public Vector2 position;
-    public float scale = 1f;
+    public float scale;
     public float rotation;
     public SpriteEffects effects;
     public Vector2 origin;
@@ -31,7 +32,16 @@ public struct TransfRenderer
     public Rectangle destinationRectangle;
     public Renderer renderer;
 
-    public TransfRenderer(){}
+    public TransfRenderer()
+    {
+        scale = 1f;
+    }
+
+    public TransfRenderer(string imageName) : this()
+    {
+        texture = LoadContent.GetTexture(imageName);
+    }
+
     public void DrawCall()
     {
         SceneManager.currentScene.rendererManager.renders.Add(this);
@@ -80,18 +90,18 @@ public class SpriteRenderer : Renderer
 {
     public SpriteRenderer(Texture2D texture)
     {
-        transf = new(){texture = texture, renderer = this};
+        transf = new(){Texture = texture, renderer = this};
         transf.origin = new(texture.Width/2f, texture.Height/2f);
     }
     public SpriteRenderer(string name) : this(LoadContent.GetTexture(name)){}
 
-    public override int GetWidth() => transf.texture.Width;
-    public override int GetHeight() => transf.texture.Height;
+    public override int GetWidth() => transf.Texture.Width;
+    public override int GetHeight() => transf.Texture.Height;
 
 
     public override void Render(TransfRenderer transf)
     {
-        Game1._spriteBatch.Draw(transf.texture, transf.position, null, transf.color, transf.rotation, transf.origin, transf.scale, transf.effects, 0);
+        Game1._spriteBatch.Draw(transf.Texture, transf.position, null, transf.color, transf.rotation, transf.origin, transf.scale, transf.effects, 0);
     }
 }
 

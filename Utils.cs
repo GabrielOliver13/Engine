@@ -3,9 +3,19 @@ namespace Engine;
 public static class Utils
 {
     public static Texture2D pixel;
+    private static SpriteRenderer point;
     public static void Start()
     {
         pixel = LoadContent.GetTexture("pixel");
+        point = new("point");
+    }
+
+    public static void Point(Vector2 position, Color color, float scale = 1)
+    {
+        point.transf.position = position;
+        point.transf.color = color;
+        point.transf.scale = scale;
+        point.DrawCall();
     }
 
     public static float Slerp(float from, float to, float weight)

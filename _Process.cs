@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Audio;
 using Newtonsoft.Json.Linq;
 
@@ -357,11 +358,13 @@ public static class DeferredManager
 }
 
 
-public struct TimeWrapper
+public class TimeWrapper
 {
     float compareTime;
     float extraSeconds;
-    public bool Up => Time.gameTime < compareTime;
+    public bool BeforeGameTime => Time.gameTime < compareTime;
+    public bool AfterGameTime => Time.gameTime > compareTime;
+
     public TimeWrapper(float extraSeconds)
     {
         this.extraSeconds = extraSeconds;
@@ -373,3 +376,21 @@ public struct TimeWrapper
         compareTime = extraSeconds + Time.gameTime;
     }
 }
+
+public class BasicParticleManager
+{
+    Func<TransfRenderer, Task> ActionAsync;
+    public Renderer defaultRenderer;
+    public BasicParticleManager(Func<TransfRenderer, Task> actionAsync) 
+    {
+        ActionAsync = actionAsync;
+    }
+
+    public async void Add(TransfRenderer transf)
+    {
+        if (defaultRenderer!=null && transf.renderer == null) transf.renderer = defaultRenderer; 
+        await ActionAsync(transf);
+    }
+}
+
+
