@@ -4,10 +4,13 @@ public static class Utils
 {
     public static Texture2D pixel;
     private static SpriteRenderer point;
+    public static Virtual3D.Camera3D camera;
+    public static bool runIn3D = false;
     public static void Start()
     {
         pixel = LoadContent.GetTexture("pixel");
         point = new("point");
+        camera = new();
     }
 
     public static void Point(Vector2 position, Color color, float scale = 1)
@@ -30,7 +33,7 @@ public static class Utils
 
     public static void CameraChangeState(Keys debugKey)
     {
-        if (Input.ButtonDown(debugKey))
+        if (Input.Button(debugKey))
         {
             if (Input.MouseMiddlePressed)
                 CameraManager.Position += Input.Moviment;
@@ -40,7 +43,13 @@ public static class Utils
                 else CameraManager.Zoom *= 0.9f;
             }
         }
+        camera.Update();
     }
+
+    public static int GetCircularValue(int value, int upTo) { return upTo == 0 ? 0 : (value % upTo + upTo) % upTo; }
+    public static float GetCircularValue(float value, float upTo) { return (value % upTo + upTo) % upTo; }
+    public static T GetCircularValue<T>(T[] values, int index) { return values[(index % values.Length + values.Length) % values.Length]; }
+    public static T GetCircularValue<T>(List<T> values, int index) { return values[(index % values.Count + values.Count) % values.Count]; }
 }
 
 
@@ -177,11 +186,7 @@ public static class Utils
 //     public static void Dot(Vector2 pos, float scale = 1){Dot(pos, Color.White, scale);}
 //     public static void Dot(Vector2 pos, Color color, float scale = 1){new SpriteRender("dot"){Position = pos, Scale = scale, Color = color, Layer = RenderLayer.UI}.FrameRender();}
 
-//     public static int GetCircularValue(int value, int upTo) { return upTo == 0 ? 0 : (value % upTo + upTo) % upTo; }
-//     public static float GetCircularValue(float value, float upTo) { return (value % upTo + upTo) % upTo; }
 
-//     public static T GetCircularValue<T>(T[] values, int index) { return values[(index % values.Length + values.Length) % values.Length]; }
-//     public static T GetCircularValue<T>(List<T> values, int index) { return values[(index % values.Count + values.Count) % values.Count]; }
     
 //     public static int GetMirrorCircular(int value, int count)
 //     {

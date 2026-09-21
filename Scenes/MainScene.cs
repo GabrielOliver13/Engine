@@ -16,7 +16,7 @@ namespace Scenes.DebugProject{
             render = new("x");
         }
         
-        public override void _Update()
+        public override void Update()
         {
             render.DrawCall();
             

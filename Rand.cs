@@ -10,7 +10,7 @@ public static class Rand
     }
     public static int Randint(int min, int max) => rand.Next(min, max);
     public static float Randint(float min, float max) => min + rand.NextSingle() * (max - min);
-    public static T Choose<T>(List<T> list)
+    public static T Choice<T>(List<T> list)
     {
         return list[Randint(0,list.Count)];
     }

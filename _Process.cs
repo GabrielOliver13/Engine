@@ -20,7 +20,7 @@ public abstract class SceneBehaviour
     public DeferredBehaviour deferredBehaviour = new();
 
     public virtual void Start(){}
-    public virtual void _Update(){}
+    public virtual void Update(){}
 }
 
 public static class SceneManager
@@ -45,6 +45,141 @@ public static class SysWindow
     }
 }
 
+
+
+public class Virtual3D
+{
+    
+    public struct Vertice
+    {
+        public Color color = Color.White;
+        public int index1 = 0;
+        public int index2 = 0;
+
+        public Vertice(int index1, int index2)
+        {
+            this.index1 = index1;
+            this.index2 = index2;
+        }
+        public Vertice(int index1, int index2, Color color) : this(index1, index2)
+        {
+            this.color = color;
+        }
+    }
+
+
+    public class Model
+    {
+        public Vector3[] marks;
+        public Vertice[] vertices;
+        public Vector3 Position;
+        public int mult = 100;
+        public Matrix matrix = Matrix.Identity;
+
+        public void Render(Camera3D camera)
+        {
+            foreach(var vertice in vertices)
+                DrawLine(camera, marks[vertice.index1], marks[vertice.index2], vertice.color);
+        }
+
+        void DrawLine(Camera3D camera, Vector3 start, Vector3 end, Color color)
+        {
+            start += Position;
+            end += Position;
+
+            if (camera.WorldToScreen(start, out var vec1) && camera.WorldToScreen(end, out var vec2)){
+                LineRender.Line(vec1, vec2, color);
+            }
+        }
+
+
+    }
+
+
+    public class Camera3D
+    {
+        public Vector3 Position {get; set;} = new(0, 0, -5);
+        public float sense = 0.002f;
+        public float speed = 1000;
+        public float yaw = 0;
+        public float pitch = 0;
+
+        float fieldOfView = MathHelper.ToRadians(60f);
+        float aspectRatio;
+        float nearPlane = 0.1f;
+        float farPlane = 1000f;
+
+        Matrix view;
+        Matrix projection;
+
+        public Vector3 Forward {get; private set;}
+        public Vector3 Right {get; private set;}
+
+        public Camera3D()
+        {
+            aspectRatio = CameraManager.ViewWidth / (float)CameraManager.ViewHeight;
+        }
+
+        public void Update()
+        {
+            RotationUpdate();
+            DirectionVectors();
+            MovimentUpdate();
+
+            // --- RECALCULA MATRIZES ---
+            view = Matrix.CreateLookAt(Position, Position + Forward, Vector3.Up);
+            projection = Matrix.CreatePerspectiveFieldOfView(fieldOfView, aspectRatio, nearPlane, farPlane);
+        }
+
+        private void DirectionVectors()
+        {
+            Forward = new Vector3(
+                (float)Math.Cos(pitch) * (float)Math.Sin(yaw),
+                (float)Math.Sin(pitch),
+                (float)Math.Cos(pitch) * (float)Math.Cos(yaw)
+            );
+            Forward.Normalize();
+            Right = Vector3.Normalize(Vector3.Cross(Forward, Vector3.Up));
+        }
+
+        private void RotationUpdate()
+        {
+            if (Input.MouseRightPressed){
+                yaw += sense * Input.Moviment.X;
+                pitch += sense * Input.Moviment.Y;
+                pitch = MathHelper.Clamp(pitch, MathHelper.ToRadians(-90f), MathHelper.ToRadians(90f));
+            }
+        }
+
+        private void MovimentUpdate()
+        {
+            Position -= Input.GetVer() * Time.deltaTime * speed * Vector3.Transform(Vector3.UnitZ, Matrix.CreateRotationY(yaw));
+            Position += Input.GetHor() * Time.deltaTime * speed * Right;
+            if (Input.Button(Keys.Q)) Position -= speed * Time.deltaTime * Vector3.UnitY;
+            if (Input.Button(Keys.E)) Position += speed * Time.deltaTime * Vector3.UnitY;
+        }
+
+        public bool WorldToScreen(Vector3 worldPoint, out Vector2 outValue)
+        {
+            outValue = Vector2.Zero;
+            Vector2 screenSize = new(CameraManager.ViewWidth, CameraManager.ViewHeight);
+
+            Matrix viewProjection = view * projection;
+            Vector4 clipSpace = Vector4.Transform(new Vector4(worldPoint, 1f), viewProjection);
+
+            if (clipSpace.W <= nearPlane) return false;
+
+            Vector3 ndc = new Vector3(clipSpace.X, clipSpace.Y, clipSpace.Z) / clipSpace.W;
+
+            float x = (ndc.X + 1f) * 0.5f * screenSize.X;
+            float y = (1f - ndc.Y) * 0.5f * screenSize.Y;
+
+            outValue = new Vector2(x - CameraManager.ViewWidth/2f, y - CameraManager.ViewHeight/2f);
+            return true;
+        }
+    }
+
+}
 
 
 public static class LoadContent
@@ -169,8 +304,6 @@ public static class Input
     public static MouseState _CurrentMouseState {get; private set;}
     public static MouseState _PreviestMouseState {get; private set;}
 
-    private static Vector2 prevPosition;
-    
     public static void _Update()
     {
         GetMouseButtonStates();
@@ -208,14 +341,30 @@ public static class Input
         _CurrentKeyboardState = Keyboard.GetState();
     }
 
-    public static bool Button(Keys key)
-    {
-        return ButtonDown(key) && _PreviestKeyboardState.IsKeyUp(key);
-    }
-
     public static bool ButtonDown(Keys key)
     {
+        return Button(key) && _PreviestKeyboardState.IsKeyUp(key);
+    }
+
+    public static bool Button(Keys key)
+    {
         return _CurrentKeyboardState.IsKeyDown(key);
+    }
+
+    public static float GetHor()
+    {
+        float value = 0;
+        if (Button(Keys.A)) value--;
+        if (Button(Keys.D)) value++;
+        return value;
+    }
+
+    public static float GetVer()
+    {
+        float value = 0;
+        if (Button(Keys.W)) value--;
+        if (Button(Keys.S)) value++;
+        return value;
     }
 }
 
@@ -232,6 +381,7 @@ public static class Time
         gameTime += deltaTime;
 
         GetFpsUpdate();
+        Game1._game.Window.Title = $"FPS: {FPS}";
     }
 
     private static void GetFpsUpdate()
@@ -267,7 +417,7 @@ public static class CameraManager
 
     public static void _Update()
     {
-        LineRender.NormalizedRectangle(Vector2.Zero, ViewWidth, ViewHeight, 0f, Color.Red);
+        LineRender.NormalizedRectangle(Position, ViewWidth, ViewHeight, 0f, Color.Red);
     }
 }
 
@@ -286,10 +436,6 @@ public class Camera2D
 
     public void _Update()
     {
-        // ViewMatrix = 
-        //     Matrix.CreateTranslation(new(Position.X + CameraManager.ViewWidth/2f / Zoom, Position.Y + CameraManager.ViewHeight/2f / Zoom, 0)) *
-        //     Matrix.CreateRotationZ(Rotation) * Matrix.CreateScale(Zoom, Zoom, 0);
-    
         ViewMatrix =
             Matrix.CreateTranslation(new Vector3(-Position.X, -Position.Y, 0)) *
             Matrix.CreateRotationZ(Rotation) *
@@ -298,6 +444,17 @@ public class Camera2D
             CameraManager.ViewWidth / 2f,
             CameraManager.ViewHeight / 2f,
         0));
+
+       
+    }
+
+    public static void SmoothFollow(Vector2 Target, float speed, float distance = 0){
+        float _distance = Vector2.Distance(Target, SceneManager.currentScene.camera2D.Position);
+        if (_distance > distance)
+        {
+            SceneManager.currentScene.camera2D.Position +=  Time.deltaTime * ((_distance-distance)/100) * speed * (Target - SceneManager.currentScene.camera2D.Position); 
+            
+        }
     }
 }
 

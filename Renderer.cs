@@ -14,6 +14,26 @@ public struct TransfLineRenderer
         int width = (int)Vector2.Distance(start, end);
         float rotation = MathF.Atan2(end.Y - start.Y, end.X - start.X);
         Game1._spriteBatch.Draw(Utils.pixel, new Rectangle((int)start.X, (int)start.Y, width, thick), null, color, rotation, Vector2.Zero, SpriteEffects.None, 0);
+    
+
+
+        // Vector2 delta = end - start;
+        // float angle = (float)Math.Atan2(delta.Y, delta.X);
+        // float length = delta.Length();
+
+        // Game1._spriteBatch.Draw(
+        //     Utils.pixel,
+        //     start,
+        //     null,
+        //     color,
+        //     angle,
+        //     Vector2.Zero,
+        //     new Vector2(length, thick),
+        //     SpriteEffects.None,
+        //     0f
+        // );
+    
+    
     }
 }
 
@@ -24,7 +44,7 @@ public struct TransfRenderer
     public Texture2D Texture {get=> texture ?? renderer.transf.texture; set=>texture = value;}
     public Color color = Color.White;
     public Vector2 position;
-    public float scale;
+    public float scale = 1f;
     public float rotation;
     public SpriteEffects effects;
     public Vector2 origin;
@@ -63,12 +83,37 @@ public class RendererManager
 
     public void Draw()
     {
-        foreach(var render in renders)
-            render.renderer.Render(render);
+        if (Utils.runIn3D){
+            for(int i = 0; i < renders.Count; i++)
+            {
+                var render = renders[i];
+                var pos = new Vector3(render.position.X, 0, render.position.Y);
+
+                if (Utils.camera.WorldToScreen(pos, out var vec1))
+                {
+                    render.position = vec1;
+                    render.rotation += Utils.camera.yaw;
+
+                    float d = 500 / Vector3.Distance(Utils.camera.Position, pos);
+
+                    render.scale = d;
+                    render.renderer.Render(render);
+                }
+            }
+        }
+        else
+        {
+            foreach(var render in renders){
+                render.renderer.Render(render);
+            }
+        }
+        
         renders.Clear();
 
-        foreach(var render in lineRenders)
+
+        foreach(var render in lineRenders){
             render._SystemSpriteBatchDraw();
+        }
         lineRenders.Clear();
     }
 }
@@ -76,7 +121,7 @@ public class RendererManager
 
 public abstract class Renderer
 {
-    public TransfRenderer transf;
+    public TransfRenderer transf = new();
 
     public abstract int GetWidth();
     public abstract int GetHeight();
@@ -140,15 +185,22 @@ public class RectangleRenderer : Renderer
 public static class LineRender
 {
     public static void Line(Vector2 start, Vector2 end, Color color){
-        SceneManager.currentScene.rendererManager.lineRenders.Add(new(){start = start, end = end, color = color, thick = (int)Math.Ceiling(1f / CameraManager.Zoom)});
+        if (Utils.runIn3D){
+            if (Utils.camera.WorldToScreen(new Vector3(start.X, 0, start.Y), out var _start) && Utils.camera.WorldToScreen(new Vector3(end.X, 0, end.Y), out var _end))
+                SceneManager.currentScene.rendererManager.lineRenders.Add(new(){start = _start, end = _end, color = color, thick = (int)Math.Ceiling(1f / CameraManager.Zoom)});
+        }
+        else
+        {
+            SceneManager.currentScene.rendererManager.lineRenders.Add(new(){start = start, end = end, color = color, thick = (int)Math.Ceiling(1f / CameraManager.Zoom)});
+        }
     }
 
     public static void Rectangle(float X, float Y, float Width, float Height, Color color)
     {
         Line(new(X, Y), new(X + Width, Y), color);
         Line(new(X, Y + Height), new(X + Width, Y + Height), color);
-        Line(new(X, X + Height), new(X, Y + Height), color);
-        Line(new(X + Width, X + Height), new(X + Width, Y + Height), color);
+        Line(new(X, Y + Height), new(X, Y), color);
+        Line(new(X + Width, X + Height), new(X + Width, Y), color);
     }
 
     public static void Rectangle(Rectangle rect, Color color)
@@ -198,5 +250,73 @@ public static class LineRender
     
     
 }
+
+
+
+
+
+
+
+public class ParalaxRender : Renderer
+{
+    public override int GetWidth() => transf.Texture.Width;
+    public override int GetHeight() => transf.Texture.Height;
+
+    List<Texture2D> textures;
+
+    public float debugViewY = 1;
+
+    
+
+    public void ElapsedMoviment(float value) {
+        for(int i = 0; i < Moviments.Length; i++)
+        {
+            Moviments[i] += value / (Moviments.Length - i);
+        }
+    }
+    public void XMovimentAt(float at)
+    {
+        for(int i = 0; i < Moviments.Length; i++)
+        {
+            Moviments[i] = at / (Moviments.Length - i);
+        }
+    }
+    public int Length = 1;
+
+    float[] Moviments;
+
+
+    public ParalaxRender(params string[] imagePath)
+    {
+        transf.renderer = this;
+        textures = imagePath.Select(LoadContent.GetTexture).ToList();
+        transf.Texture = textures[0];
+        transf.origin = new(GetWidth()/2f, GetHeight()/2f);
+        
+        Moviments = new float[textures.Count];
+    }
+
+    
+
+    public override void Render(TransfRenderer data)
+    {
+        for(int textureIndex = 0; textureIndex < textures.Count; textureIndex++)
+        {
+            for (int i = -Length; i < Length+1; i++) {
+                
+                DrawPart(textures[textureIndex], Utils.GetCircularValue(Moviments[textureIndex], GetWidth()), data, i);
+            }
+        }
+    }
+
+    private void DrawPart(Texture2D texture,float Moviment, TransfRenderer data, int length)
+    {
+        var dir = Vector2.Rotate(Vector2.UnitX, data.rotation);
+        Game1._spriteBatch.Draw(texture, data.position + dir * length * texture.Width * data.scale + dir * Moviment, null, data.color, data.rotation, data.origin, data.scale, data.effects, 0);
+    }
+}
+
+
+
 
 

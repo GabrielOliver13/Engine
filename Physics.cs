@@ -8,8 +8,10 @@ using nkast.Aether.Physics2D.Dynamics;
 public class PhysicsManager
 {
     public World world;
-    public int Units = 45;
+    public int units = 45;
     public HashSet<CustomBody> bodies = new();
+
+    public float Gravity {get=>world.Gravity.Y; set{world.Gravity = Vector2.UnitY * value;}}
     public PhysicsManager(float gravity = 9.8f)
     {
         world = new(Vector2.UnitY * gravity);
@@ -33,17 +35,21 @@ public enum CollisionCat
     Bullet = Category.Cat2,
     Sensor = Category.Cat3,
     Shield = Category.Cat4,
+    Ground = Category.Cat5,
+    BaseCreature = Category.Cat6,
 }
 
 public class CustomBody
 {
     public Body body;
-    public PhysicsManager _physicsManager {get; protected set;}
-    public Vector2 Position {get => body.Position * _physicsManager.Units; set => body.Position = value / _physicsManager.Units;}
+    public PhysicsManager PhysicsManager {get; protected set;}
+    public Vector2 Position {get => body.Position * PhysicsManager.units; set => body.Position = value / PhysicsManager.units;}
     public BodyType BodyType {get=>body.BodyType; set=> body.BodyType = value;}
     public float Rotation {get=>body.Rotation; set=>body.Rotation = value;}
     public Vector2 LinearVelocity {get => body.LinearVelocity; set=> body.LinearVelocity = value;}
     public object CustomBodyTag {get; set;}
+    public bool IgnoreGravity {get=> body.IgnoreGravity; set=>body.IgnoreGravity = value;}
+
     // public CollisionCat CollidesWith {get=>(CollisionCat)MainFixture.CollidesWith; set=>MainFixture.CollidesWith = (Category)value;}
     // public CollisionCat CollisionCategories {get=>(CollisionCat)MainFixture.CollisionCategories; set=>MainFixture.CollisionCategories = (Category)value;}
     // public bool IsSensor {get=>MainFixture.IsSensor; set=>MainFixture.IsSensor = value;}
@@ -54,12 +60,12 @@ public class CustomBody
     private List<CustomFixture> customFixtures = new();
     public CustomBody()
     {
-        _physicsManager = SceneManager.currentScene.physics;
+        PhysicsManager = SceneManager.currentScene.physics;
         body = new();
         body.BodyType = BodyType.Dynamic;
-        _physicsManager.world.Add(body);
-        _physicsManager = SceneManager.currentScene.physics;
-        _physicsManager.bodies.Add(this);
+        PhysicsManager.world.Add(body);
+        PhysicsManager = SceneManager.currentScene.physics;
+        PhysicsManager.bodies.Add(this);
     }
 
     public CircleFixture CreateCircle(float radius, Vector2 offSet, float density = 0)
@@ -117,14 +123,14 @@ public class CustomBody
     public void Destroy()
     {
         if (hasBeenDestroyed) return;
-        _physicsManager.bodies.Remove(this);
+        PhysicsManager.bodies.Remove(this);
 
         DeferredManager.NextFrame(() =>
         {
             foreach(var fixtures in customFixtures)
                 fixtures._OnDispose();
             customFixtures.Clear();
-            _physicsManager.world.Remove(body);
+            PhysicsManager.world.Remove(body);
         });
         hasBeenDestroyed = true;
     }
@@ -226,6 +232,7 @@ public abstract class CustomFixture
     public int foundCollisionsCount => foundCollisions.Count;
     public Vector2 OffSet {get; protected set;}
     public object CustomFixtureTag;
+    public float Restitution {get=>fixture.Restitution; set=>fixture.Restitution = value;}
     protected void SetFixture(Fixture fixture, CustomBody customBody)
     {
         CustomBody = customBody;
@@ -298,7 +305,7 @@ public class CircleFixture : CustomFixture
     {
         OffSet = offSet;
         Radius = radius;
-        SetFixture(body.CreateCircle(radius / from._physicsManager.Units, density, offSet / from._physicsManager.Units), from);
+        SetFixture(body.CreateCircle(radius / from.PhysicsManager.units, density, offSet / from.PhysicsManager.units), from);
         fixture.Tag = this;
     }
 
@@ -317,7 +324,7 @@ public class RectFixture : CustomFixture
         OffSet = offSet;
         Width = width;
         Height = height;
-        SetFixture(body.CreateRectangle(Width / from._physicsManager.Units, Height / from._physicsManager.Units, density, offSet / from._physicsManager.Units), from);
+        SetFixture(body.CreateRectangle(Width / from.PhysicsManager.units, Height / from.PhysicsManager.units, density, offSet / from.PhysicsManager.units), from);
         fixture.Tag = this;
     }
 
@@ -340,9 +347,9 @@ public class ConeFixture : CustomFixture
 
 
         Vertices vertices = new(){
-            offSet / from._physicsManager.Units,
-            offSet / from._physicsManager.Units + new Vector2(Length / from._physicsManager.Units, -height/2f / from._physicsManager.Units),
-            offSet / from._physicsManager.Units + new Vector2(Length / from._physicsManager.Units, height/2f / from._physicsManager.Units)
+            offSet / from.PhysicsManager.units,
+            offSet / from.PhysicsManager.units + new Vector2(Length / from.PhysicsManager.units, -height/2f / from.PhysicsManager.units),
+            offSet / from.PhysicsManager.units + new Vector2(Length / from.PhysicsManager.units, height/2f / from.PhysicsManager.units)
         };
 
         SetFixture(body.CreatePolygon(vertices, density), from);

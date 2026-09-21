@@ -5,6 +5,7 @@ global using Microsoft.Xna.Framework.Graphics;
 global using Microsoft.Xna.Framework.Input;
 global using System.Collections.Generic;
 global using System;
+global using nkast.Aether.Physics2D.Dynamics;
 namespace Engine;
 
 public class Game1 : Game
@@ -24,8 +25,8 @@ public class Game1 : Game
         _game = this;
 
         _game.IsFixedTimeStep = false;
-
-        
+        _game.Window.AllowUserResizing = true;
+        _graphics.SynchronizeWithVerticalRetrace = false;
     }
 
     protected override void Initialize()
@@ -38,7 +39,7 @@ public class Game1 : Game
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         _graphicsDevice = GraphicsDevice;
 
-        SceneManager.currentScene = SceneManager.CreateScene<Scenes.SpaceShipsWar.Game>();
+        SceneManager.currentScene = SceneManager.CreateScene<Scenes.PathFinding.Game>();
 
         SysWindow.SetSize(SceneManager.currentScene.ViewWidth, SceneManager.currentScene.ViewHeight);
         
@@ -60,7 +61,7 @@ public class Game1 : Game
         TaskRunner.Update();
         SceneManager.currentScene.physics._Update();
         SceneManager.currentScene.camera2D._Update();
-        SceneManager.currentScene._Update();
+        SceneManager.currentScene.Update();
         CameraManager._Update();
 
         Input._Update();
